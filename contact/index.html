@@ -29,7 +29,7 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--mut);font-siz
 @media(max-width:520px){.two{grid-template-columns:1fr;gap:0}nav.top ul li.x{display:none}}</style></head><body>
 <nav class="top" aria-label="Main"><div class="w"><a href="/"><picture><source type="image/webp" srcset="/brand/v5/logo-full-reverse-40.webp 1x, /brand/v5/logo-full-reverse-80.webp 2x"><img src="/brand/v5/logo-full-reverse-40.png" srcset="/brand/v5/logo-full-reverse-80.png 2x" alt="NEPA Found" width="141" height="40"></picture></a><ul><li class="x"><a href="/">Home</a></li><li><a href="/beta/">Claim a beta spot</a></li><li><a href="/contact/" aria-current=page>Contact</a></li></ul></div></nav>
 <main class="w wrap"><section><p class="tag">Get found. Stay booked.</p><h1>Talk to Joel.</h1><p class="lead">Questions about NEPA Found, pricing or getting set up? Send a note and we will get back to you, usually the same business day.</p><ul class="pts"><li>Interregnum Ventures LLC (NEPA Found)</li><li>91 Price Street Fl 2, Kingston, PA 18704</li><li>Email: <a href="mailto:joel@nepafound.com">joel@nepafound.com</a></li></ul></section>
-<section class="card" aria-labelledby="ct"><form id="nf-form" novalidate data-kind="contact" data-api="https://worker1-ms-7c95.tail8de215.ts.net:8443/signup" data-consent="sms-v1-20261019" data-btn="Send message">
+<section class="card" aria-labelledby="ct"><form id="nf-form" method="post" novalidate data-kind="contact" data-api="https://worker1-ms-7c95.tail8de215.ts.net:8443/signup" data-consent="sms-v1-20261019" data-btn="Send message">
 <h2 id="ct">Contact NEPA Found</h2><p class="req">All fields are required unless marked optional.</p>
 <div class="two"><div class="f"><label for="name">Your name</label><input id="name" name="name" autocomplete="name" required maxlength="120"></div>
 <div class="f"><label for="business">Business name</label><input id="business" name="business" autocomplete="organization" required maxlength="160"></div></div>
@@ -43,14 +43,20 @@ footer{border-top:1px solid var(--line);padding:30px 0;color:var(--mut);font-siz
 <div class="ok" id="nf-ok" hidden tabindex="-1"><div class="ic" aria-hidden="true">&#10003;</div><h2>Thanks, we got it.</h2><p>Joel will get back to you soon.</p><p id="nf-ok-sms"></p></div></section></main>
 <footer><div class="w"><picture><source type="image/webp" srcset="/brand/v5/logo-full-reverse-40.webp 1x, /brand/v5/logo-full-reverse-80.webp 2x"><img src="/brand/v5/logo-full-reverse-40.png" srcset="/brand/v5/logo-full-reverse-80.png 2x" alt="NEPA Found" width="141" height="40"></picture><br>© 2026 NEPA Found · Interregnum Ventures LLC · 91 Price Street Fl 2, Kingston, PA 18704 · <a href="mailto:joel@nepafound.com">joel@nepafound.com</a><br><a href="/">Home</a> · <a href="/beta/">Claim a beta spot</a> · <a href="/contact/">Contact</a> · <a href="/signup/">Text alerts sign-up</a> · <a href="/privacy">Privacy</a> · <a href="/terms">Terms</a> · <a href="https://billing.stripe.com/p/login/fZu7sKdlYgTD47c7YF4Ja00" rel="noopener">Manage billing</a> · We never sell your data.</div></footer>
 <script>(function(){var f=document.getElementById('nf-form'),e=document.getElementById('nf-err'),b=f.querySelector('button');
+function reset(){b.disabled=false;b.textContent=f.dataset.btn}
+function mailto(d){var t='Name: '+d.name+'\nBusiness: '+d.business+'\nEmail: '+d.email+'\nPhone: '+d.phone+(d.message?'\n\n'+d.message:'');
+return 'mailto:joel@nepafound.com?subject='+encodeURIComponent((d.kind==='contact'?'Website message: ':'Beta spot: ')+d.business)+'&body='+encodeURIComponent(t)}
+function fail(d){e.textContent='We could not reach our sign-up server from your network. ';var a=document.createElement('a');a.href=mailto(d);a.textContent='Email your details to Joel instead';e.appendChild(a);e.appendChild(document.createTextNode(', or try again in a minute.'));reset()}
 f.addEventListener('submit',function(ev){ev.preventDefault();e.textContent='';[].forEach.call(f.querySelectorAll('.bad'),function(x){x.classList.remove('bad')});
 if(!f.checkValidity()){f.reportValidity();return}
 var d={kind:f.dataset.kind,name:f.name.value,business:f.business.value,email:f.email.value,phone:f.phone.value,
 message:f.message?f.message.value:'',website:f.website.value,sms_consent:f.sms_consent.checked===true,consent_version:f.dataset.consent,page_url:location.href};
 b.disabled=true;b.textContent='Sending\u2026';
-fetch(f.dataset.api,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(d),credentials:'same-origin'}).then(function(r){return r.json().then(function(j){return{s:r.status,j:j}})}).then(function(r){
+var ac=window.AbortController?new AbortController():null,tm=setTimeout(function(){if(ac)ac.abort()},15000);
+fetch(f.dataset.api,{method:'POST',mode:'cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(d),credentials:'omit',signal:ac?ac.signal:undefined}).then(function(r){clearTimeout(tm);return r.json().then(function(j){return{s:r.status,j:j}},function(){return{s:r.status,j:{}}})}).then(function(r){
 if(r.s===200&&r.j.ok){var o=document.getElementById('nf-ok');document.getElementById('nf-ok-sms').textContent=d.sms_consent?'You opted in to NEPA Found Call Alerts by text. Reply STOP anytime to opt out, or HELP for help.':'You did not opt in to text messages. We will reply by email or phone call.';
 f.hidden=true;o.hidden=false;o.setAttribute('data-sms',d.sms_consent?'1':'0');o.focus();return}
+if(r.s>=500||r.s===0)return fail(d);
 var fl=(r.j.detail&&r.j.detail.fields)||[];fl.forEach(function(n){if(f[n])f[n].classList.add('bad')});
-e.textContent=r.s===429?'Too many tries. Please wait a bit and try again.':'Please check the highlighted fields and try again.';b.disabled=false;b.textContent=f.dataset.btn})
-.catch(function(){e.textContent='Something went wrong sending the form. Please try again, or email joel@nepafound.com.';b.disabled=false;b.textContent=f.dataset.btn})})})();</script></body></html>
+e.textContent=r.s===429?'Too many tries. Please wait a bit and try again.':'Please check the highlighted fields and try again.';reset()})
+.catch(function(){clearTimeout(tm);fail(d)})})})();</script><noscript><p class="err">This form needs JavaScript. Please email <a href="mailto:joel@nepafound.com">joel@nepafound.com</a> instead.</p></noscript></body></html>
